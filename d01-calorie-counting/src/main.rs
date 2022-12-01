@@ -7,6 +7,7 @@ use itertools::Itertools;
 fn get_calories_per_elf(input: &str) -> Vec<u64> {
     input
         .split_terminator('\n')
+        .map(|x| x.trim())
         .fold(Vec::new(), |mut acc, x| {
             if x.is_empty() || acc.is_empty() {
                 acc.push(Vec::new());
