@@ -9,6 +9,24 @@ pub enum Sign {
     Scissors,
 }
 
+impl Sign {
+    pub fn wins_against(self) -> Sign {
+        match self {
+            Sign::Rock => Sign::Scissors,
+            Sign::Paper => Sign::Rock,
+            Sign::Scissors => Sign::Paper,
+        }
+    }
+
+    pub fn looses_against(self) -> Sign {
+        match self {
+            Sign::Rock => Sign::Paper,
+            Sign::Paper => Sign::Scissors,
+            Sign::Scissors => Sign::Rock,
+        }
+    }
+}
+
 impl Scorable for Sign {
     fn points(&self) -> u64 {
         match self {
@@ -23,28 +41,15 @@ impl Sign {
     fn result(&self, other: &Sign) -> Result {
         if self == other {
             Result::Draw
+        } else if self.wins_against() == *other {
+            Result::Win
         } else {
-            static BEATS: &[(Sign, Sign); 3] = &[
-                (Sign::Rock, Sign::Scissors),
-                (Sign::Paper, Sign::Rock),
-                (Sign::Scissors, Sign::Paper),
-            ];
-
-            let beats = BEATS
-                .binary_search_by(|(k, _)| k.cmp(self))
-                .map(|x| BEATS[x].1)
-                .unwrap();
-
-            if beats == *other {
-                Result::Win
-            } else {
-                Result::Lose
-            }
+            Result::Lose
         }
     }
 }
 
-enum Result {
+pub enum Result {
     Win,
     Draw,
     Lose,
