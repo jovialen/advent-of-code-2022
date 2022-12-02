@@ -1,0 +1,79 @@
+pub trait Scorable {
+    fn points(&self) -> u64;
+}
+
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug)]
+pub enum Sign {
+    Rock,
+    Paper,
+    Scissors,
+}
+
+impl Scorable for Sign {
+    fn points(&self) -> u64 {
+        match self {
+            Sign::Rock => 1,
+            Sign::Paper => 2,
+            Sign::Scissors => 3,
+        }
+    }
+}
+
+impl Sign {
+    fn result(&self, other: &Sign) -> Result {
+        if self == other {
+            Result::Draw
+        } else {
+            static BEATS: &[(Sign, Sign); 3] = &[
+                (Sign::Rock, Sign::Scissors),
+                (Sign::Paper, Sign::Rock),
+                (Sign::Scissors, Sign::Paper),
+            ];
+
+            let beats = BEATS
+                .binary_search_by(|(k, _)| k.cmp(self))
+                .map(|x| BEATS[x].1)
+                .unwrap();
+
+            if beats == *other {
+                Result::Win
+            } else {
+                Result::Lose
+            }
+        }
+    }
+}
+
+enum Result {
+    Win,
+    Draw,
+    Lose,
+}
+
+impl Scorable for Result {
+    fn points(&self) -> u64 {
+        match self {
+            Result::Win => 6,
+            Result::Draw => 3,
+            Result::Lose => 0,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Round {
+    you: Sign,
+    opponent: Sign,
+}
+
+impl Round {
+    pub fn new(you: Sign, opponent: Sign) -> Self {
+        Self { you, opponent }
+    }
+}
+
+impl Scorable for Round {
+    fn points(&self) -> u64 {
+        self.you.points() + self.you.result(&self.opponent).points()
+    }
+}
