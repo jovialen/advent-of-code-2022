@@ -48,6 +48,7 @@ fn parse_input_2(input: &str) -> Vec<Round> {
                 _ => unreachable!(),
             };
 
+            // Get the correct sign to get the desired result
             let you = match result {
                 Result::Win => opponent.looses_against(),
                 Result::Draw => opponent,
@@ -59,14 +60,18 @@ fn parse_input_2(input: &str) -> Vec<Round> {
         .collect()
 }
 
+fn get_total_points(rounds: Vec<Round>) -> u64 {
+    rounds.iter().map(|v| v.points()).sum()
+}
+
 fn main() {
     let raw = include_str!("../input.txt");
 
     let input = parse_input_1(raw);
-    let result = input.iter().fold(0, |acc, v| acc + v.points());
+    let result = get_total_points(input);
     println!("If XYZ are signs, then the total is: {}", result);
 
     let input = parse_input_2(raw);
-    let result = input.iter().fold(0, |acc, v| acc + v.points());
+    let result = get_total_points(input);
     println!("If XYZ are results, then the total is: {}", result);
 }
