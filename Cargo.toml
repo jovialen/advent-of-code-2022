@@ -1,5 +1,6 @@
 [workspace]
 members = [
     "d01-calorie-counting",
-    "d02-rock-paper-scissors"
+    "d02-rock-paper-scissors",
+    "d03-rucksack",
 ]
