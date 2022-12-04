@@ -4,9 +4,13 @@ struct Assignment(usize, usize);
 struct Pair(Assignment, Assignment);
 
 impl Pair {
-    fn overlaps(&self) -> bool {
+    fn complete_overlap(&self) -> bool {
         (self.0 .0 <= self.1 .0 && self.0 .1 >= self.1 .1)
             || (self.1 .0 <= self.0 .0 && self.1 .1 >= self.0 .1)
+    }
+
+    fn any_overlap(&self) -> bool {
+        self.0 .1 >= self.1 .0 && self.0 .0 <= self.1 .1
     }
 }
 
@@ -30,7 +34,16 @@ fn parse_input(input: &str) -> Vec<Pair> {
 fn main() {
     let input = parse_input(include_str!("../input.txt"));
 
-    let contained_count = input.iter().filter(|&pair| pair.overlaps()).count();
+    let complete_overlap_count = input.iter().filter(|&pair| pair.complete_overlap()).count();
+    let any_overlap_count = input.iter().filter(|&pair| pair.any_overlap()).count();
 
-    println!("Number of overlapping assignemnts: {}", contained_count);
+    println!(
+        "Number of completly overlapping assignemnts: {}",
+        complete_overlap_count
+    );
+
+    println!(
+        "Number of any overlapping assignemnts: {}",
+        any_overlap_count
+    );
 }
