@@ -3,4 +3,5 @@ members = [
     "d01-calorie-counting",
     "d02-rock-paper-scissors",
     "d03-rucksack",
+    "d04-camp-cleanup",
 ]
