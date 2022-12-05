@@ -6,7 +6,12 @@ struct Instruction {
 }
 
 fn parse_input(input: &str) -> (Vec<Vec<char>>, Vec<Instruction>) {
-    let mut iter = input.split("\n\n");
+    #[cfg(windows)]
+    const PATTERN: &'static str = "\r\n\r\n";
+    #[cfg(not(windows))]
+    const PATTERN: &'static str = "\n\n";
+
+    let mut iter = input.split(PATTERN);
 
     let stacks = iter
         .next()
