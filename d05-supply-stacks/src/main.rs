@@ -27,6 +27,7 @@ fn parse_input(input: &str) -> (Vec<Vec<char>>, Vec<Instruction>) {
                     acc[i].push(v);
                 }
             }
+
             acc
         });
 
@@ -40,27 +41,38 @@ fn parse_input(input: &str) -> (Vec<Vec<char>>, Vec<Instruction>) {
         .chunks_exact(3)
         .map(|chunk| Instruction {
             count: chunk[0].parse().unwrap(),
-            from: chunk[1].parse().unwrap(),
-            to: chunk[2].parse().unwrap(),
+            from: chunk[1].parse::<usize>().unwrap() - 1,
+            to: chunk[2].parse::<usize>().unwrap() - 1,
         })
         .collect();
 
     (stacks, instructions)
 }
 
-fn main() {
-    let (mut stacks, instructions) = parse_input(include_str!("../input.txt"));
-
-    // for instruction in instructions {
-    //     for _ in 0..instruction.count {
-    //         if let Some(v) = stacks[instruction.from - 1].pop() {
-    //             stacks[instruction.to - 1].push(v);
-    //         }
-    //     }
-    // }
+fn task_1(stacks: &Vec<Vec<char>>, instructions: &Vec<Instruction>) -> String {
+    let mut stacks = stacks.clone();
 
     for instruction in instructions {
-        let mut crates: Vec<_> = stacks[instruction.from - 1]
+        let mut crates: Vec<_> = stacks[instruction.from]
+            .clone()
+            .into_iter()
+            .rev()
+            .take(instruction.count)
+            .collect();
+
+        stacks[instruction.to].append(&mut crates);
+        let len = stacks[instruction.from].len();
+        stacks[instruction.from].truncate(len - instruction.count);
+    }
+
+    stacks.iter().map(|v| v.last().unwrap_or(&' ')).collect()
+}
+
+fn task_2(stacks: &Vec<Vec<char>>, instructions: &Vec<Instruction>) -> String {
+    let mut stacks = stacks.clone();
+
+    for instruction in instructions {
+        let mut crates: Vec<_> = stacks[instruction.from]
             .clone()
             .into_iter()
             .rev()
@@ -68,15 +80,20 @@ fn main() {
             .rev()
             .collect();
 
-        stacks[instruction.to - 1].append(&mut crates);
-        let len = stacks[instruction.from - 1].len();
-        stacks[instruction.from - 1].truncate(len - instruction.count);
+        stacks[instruction.to].append(&mut crates);
+        let len = stacks[instruction.from].len();
+        stacks[instruction.from].truncate(len - instruction.count);
     }
 
-    let out = stacks
-        .iter()
-        .map(|v| v.last().unwrap_or(&' '))
-        .collect::<String>();
+    stacks.iter().map(|v| v.last().unwrap_or(&' ')).collect()
+}
 
-    println!("Final stack: {}", out);
+fn main() {
+    let (stacks, instructions) = parse_input(include_str!("../input.txt"));
+
+    let task_1 = task_1(&stacks, &instructions);
+    let task_2 = task_2(&stacks, &instructions);
+
+    println!("Final stack with CrateMover 9000: {}", task_1);
+    println!("Final stack with CrateMover 9001: {}", task_2);
 }
