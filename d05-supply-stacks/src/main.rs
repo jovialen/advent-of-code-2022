@@ -51,17 +51,30 @@ fn parse_input(input: &str) -> (Vec<Vec<char>>, Vec<Instruction>) {
 fn main() {
     let (mut stacks, instructions) = parse_input(include_str!("../input.txt"));
 
+    // for instruction in instructions {
+    //     for _ in 0..instruction.count {
+    //         if let Some(v) = stacks[instruction.from - 1].pop() {
+    //             stacks[instruction.to - 1].push(v);
+    //         }
+    //     }
+    // }
+
     for instruction in instructions {
-        for _ in 0..instruction.count {
-            if let Some(v) = stacks[instruction.from - 1].pop() {
-                stacks[instruction.to - 1].push(v);
-            }
-        }
+        let mut crates: Vec<_> = stacks[instruction.from - 1]
+            .clone()
+            .into_iter()
+            .rev()
+            .take(instruction.count)
+            .rev()
+            .collect();
+
+        stacks[instruction.to - 1].append(&mut crates);
+        let len = stacks[instruction.from - 1].len();
+        stacks[instruction.from - 1].truncate(len - instruction.count);
     }
 
     let out = stacks
         .iter()
-        .inspect(|v| println!("{:?}", v))
         .map(|v| v.last().unwrap_or(&' '))
         .collect::<String>();
 
