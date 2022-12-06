@@ -3,12 +3,10 @@ const PACKET_MESSAGE_START_LEN: usize = 14;
 
 fn find_unique_sequence(bytes: &[u8], unique_count: usize) -> Option<(usize, String)> {
     let offset = bytes.windows(unique_count).position(|window| {
-        for (i, x) in window.iter().enumerate() {
-            if window[i + 1..].iter().any(|y| x == y) {
-                return false;
-            }
-        }
-        true
+        window
+            .iter()
+            .enumerate()
+            .all(|(i, x)| !window[i + 1..].iter().any(|y| x == y))
     })?;
 
     let sequence = bytes[offset..offset + unique_count]
