@@ -43,18 +43,19 @@ fn parse_input(input: &str) -> HashMap<PathBuf, Vec<Entry>> {
 }
 
 fn size_of_dir(filesystem: &HashMap<PathBuf, Vec<Entry>>, dir: &PathBuf) -> usize {
-    let mut total_size = 0;
-    for entry in filesystem.get(dir).unwrap() {
-        match entry {
-            Entry::File(size) => total_size += size,
+    filesystem
+        .get(dir)
+        .unwrap()
+        .iter()
+        .map(|entry| match entry {
+            Entry::File(size) => *size,
             Entry::Directory(name) => {
                 let mut sub_dir = dir.clone();
                 sub_dir.push(name);
-                total_size += size_of_dir(filesystem, &sub_dir);
+                size_of_dir(filesystem, &sub_dir)
             }
-        }
-    }
-    total_size
+        })
+        .sum()
 }
 
 fn main() {
