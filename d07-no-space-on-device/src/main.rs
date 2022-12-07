@@ -1,12 +1,12 @@
 use std::{collections::HashMap, path::PathBuf};
 
 #[derive(Debug)]
-enum Entry {
+enum Entry<'a> {
     File(usize),
-    Directory(String),
+    Directory(&'a str),
 }
 
-fn parse_input(input: &str) -> HashMap<PathBuf, Vec<Entry>> {
+fn parse_input<'a>(input: &'a str) -> HashMap<PathBuf, Vec<Entry<'a>>> {
     let mut path = PathBuf::new();
     let mut filesystem = HashMap::new();
 
@@ -30,7 +30,7 @@ fn parse_input(input: &str) -> HashMap<PathBuf, Vec<Entry>> {
                 Some(("dir", dirname)) => filesystem
                     .get_mut(&path)
                     .unwrap()
-                    .push(Entry::Directory(dirname.to_string())),
+                    .push(Entry::Directory(dirname)),
                 Some((size, _filename)) => filesystem
                     .get_mut(&path)
                     .unwrap()
@@ -43,20 +43,21 @@ fn parse_input(input: &str) -> HashMap<PathBuf, Vec<Entry>> {
     filesystem
 }
 
-fn size_of_dir(filesystem: &HashMap<PathBuf, Vec<Entry>>, dir: &PathBuf) -> usize {
-    filesystem
-        .get(dir)
-        .unwrap()
-        .iter()
-        .map(|entry| match entry {
-            Entry::File(size) => *size,
-            Entry::Directory(name) => {
-                let mut sub_dir = dir.clone();
-                sub_dir.push(name);
-                size_of_dir(filesystem, &sub_dir)
-            }
-        })
-        .sum()
+fn size_of_dir(filesystem: &HashMap<PathBuf, Vec<Entry>>, dir: &PathBuf) -> Option<usize> {
+    Some(
+        filesystem
+            .get(dir)?
+            .iter()
+            .filter_map(|entry| match entry {
+                Entry::File(size) => Some(*size),
+                Entry::Directory(name) => {
+                    let mut sub_dir = dir.clone();
+                    sub_dir.push(name);
+                    size_of_dir(filesystem, &sub_dir)
+                }
+            })
+            .sum(),
+    )
 }
 
 fn main() {
@@ -64,7 +65,7 @@ fn main() {
 
     let entry_sizes = input
         .keys()
-        .map(|key| size_of_dir(&input, &key))
+        .map(|key| size_of_dir(&input, &key).unwrap())
         .collect::<Vec<_>>();
 
     let sum: usize = entry_sizes.iter().filter(|&&size| size <= 100000).sum();
