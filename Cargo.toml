@@ -6,4 +6,5 @@ members = [
     "d04-camp-cleanup",
     "d05-supply-stacks",
     "d06-tuning-trouble",
+    "d07-no-space-on-device",
 ]
