@@ -6,9 +6,11 @@ enum Entry<'a> {
     Directory(&'a str),
 }
 
-fn parse_input<'a>(input: &'a str) -> HashMap<PathBuf, Vec<Entry<'a>>> {
+type Filesystem<'a> = HashMap<PathBuf, Vec<Entry<'a>>>;
+
+fn parse_input<'a>(input: &'a str) -> Filesystem<'a> {
     let mut path = PathBuf::new();
-    let mut filesystem = HashMap::new();
+    let mut filesystem = Filesystem::new();
 
     for line in input.lines().filter(|line| !line.is_empty()) {
         if line.starts_with("$") {
@@ -43,7 +45,7 @@ fn parse_input<'a>(input: &'a str) -> HashMap<PathBuf, Vec<Entry<'a>>> {
     filesystem
 }
 
-fn size_of_dir(filesystem: &HashMap<PathBuf, Vec<Entry>>, dir: &PathBuf) -> Option<usize> {
+fn size_of_dir(filesystem: &Filesystem, dir: &PathBuf) -> Option<usize> {
     Some(
         filesystem
             .get(dir)?
