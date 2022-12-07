@@ -59,24 +59,18 @@ fn size_of_dir(filesystem: &HashMap<PathBuf, Vec<Entry>>, dir: &PathBuf) -> usiz
 
 fn main() {
     let input = parse_input(include_str!("../input.txt"));
+    let entry_sizes = input
+        .keys()
+        .map(|key| size_of_dir(&input, &key))
+        .collect::<Vec<_>>();
 
-    let mut sum = 0;
-    for (k, _) in &input {
-        let size = size_of_dir(&input, k);
-        if size <= 100000 {
-            sum += size;
-        }
-    }
-
+    let sum: usize = entry_sizes.iter().filter(|&&size| size <= 100000).sum();
     println!("Total size of all dirs under size of 100000: {}", sum);
 
-    let mut smallest = usize::MAX;
-    for (k, _) in &input {
-        let size = size_of_dir(&input, k);
-        if size >= 8381165 && size < smallest {
-            smallest = size;
-        }
-    }
-
+    let smallest = entry_sizes
+        .iter()
+        .filter(|&&size| size >= 8381165)
+        .min()
+        .unwrap_or(&0);
     println!("Size of the smallest directory to be deleted: {}", smallest);
 }
