@@ -69,4 +69,14 @@ fn main() {
     }
 
     println!("Total size of all dirs under size of 100000: {}", sum);
+
+    let mut smallest = usize::MAX;
+    for (k, _) in &input {
+        let size = size_of_dir(&input, k);
+        if size >= 8381165 && size < smallest {
+            smallest = size;
+        }
+    }
+
+    println!("Size of the smallest directory to be deleted: {}", smallest);
 }
