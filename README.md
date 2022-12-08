@@ -13,3 +13,4 @@ My solutions to the advent of code 2022.
 | 5   | VQZNJMWTR  | NLCDCLVMQ  |
 | 6   | 1766       | 2383       |
 | 7   | 1449447    | 8679207    |
+| 8   | 1711       | 301392     |
