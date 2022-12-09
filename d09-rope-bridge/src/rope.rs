@@ -6,44 +6,37 @@ pub struct Position {
 
 #[derive(Clone)]
 pub struct Rope {
-    head: Position,
-    tail: Vec<Position>,
+    knots: Vec<Position>,
 }
 
 impl Rope {
     pub fn new(tail_len: usize) -> Self {
         Self {
-            head: Position::default(),
-            tail: vec![Position::default(); tail_len],
+            knots: vec![Position::default(); tail_len + 1],
         }
     }
 
     pub fn do_move(&mut self, m: Move) {
-        let last_head = self.head;
+        let head = self.knots.first_mut().unwrap();
 
         match m {
-            Move::Up => self.head.y += 1,
-            Move::Down => self.head.y -= 1,
-            Move::Left => self.head.x -= 1,
-            Move::Right => self.head.x += 1,
+            Move::Up => head.y += 1,
+            Move::Down => head.y -= 1,
+            Move::Left => head.x -= 1,
+            Move::Right => head.x += 1,
         }
 
         self.update_tail();
     }
 
     pub fn get_tail(&self) -> Option<&Position> {
-        self.tail.last()
+        self.knots.last()
     }
 
     fn update_tail(&mut self) {
-        for i in 0..self.tail.len() {
-            let parent = if i > 0 {
-                *self.tail.get(i - 1).unwrap()
-            } else {
-                self.head
-            };
-
-            let child = self.tail.get_mut(i).unwrap();
+        for i in 1..self.knots.len() {
+            let parent = *self.knots.get(i - 1).unwrap();
+            let child = self.knots.get_mut(i).unwrap();
 
             let dx = parent.x - child.x;
             let dy = parent.y - child.y;
