@@ -48,18 +48,9 @@ impl Rope {
             let dx = parent.x - child.x;
             let dy = parent.y - child.y;
 
-            if dx.abs() >= 2 {
+            if dx.abs() >= 2 || dy.abs() >= 2 {
                 child.x += dx.signum();
-
-                if dy != 0 {
-                    child.y += dy.signum();
-                }
-            } else if dy.abs() >= 2 {
                 child.y += dy.signum();
-
-                if dx != 0 {
-                    child.x += dx.signum();
-                }
             }
         }
     }
