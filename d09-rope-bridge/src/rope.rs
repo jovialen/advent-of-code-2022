@@ -4,6 +4,14 @@ pub struct Position {
     y: i64,
 }
 
+#[derive(Clone, Copy)]
+pub enum Move {
+    Up,
+    Down,
+    Left,
+    Right,
+}
+
 #[derive(Clone)]
 pub struct Rope {
     knots: Vec<Position>,
@@ -47,12 +55,4 @@ impl Rope {
             }
         }
     }
-}
-
-#[derive(Clone, Copy)]
-pub enum Move {
-    Up,
-    Down,
-    Left,
-    Right,
 }
