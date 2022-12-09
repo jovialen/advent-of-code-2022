@@ -1,7 +1,7 @@
 mod rope;
 use rope::*;
 
-use std::collections::HashSet;
+use rustc_hash::FxHashSet;
 
 fn parse_input(input: &str) -> Vec<Move> {
     input
@@ -20,7 +20,8 @@ fn parse_input(input: &str) -> Vec<Move> {
 
 fn find_unique_position_count(moves: &Vec<Move>, rope_len: usize) -> usize {
     let mut rope = Rope::new(rope_len - 1);
-    let mut unique = HashSet::from([*rope.get_tail().unwrap()]);
+    let mut unique = FxHashSet::from_iter([*rope.get_tail().unwrap()]);
+
     for m in moves {
         rope.do_move(*m);
         unique.insert(*rope.get_tail().unwrap());
