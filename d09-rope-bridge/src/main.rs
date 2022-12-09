@@ -1,72 +1,42 @@
+mod rope;
+use rope::*;
+
 use std::collections::HashSet;
-
-#[derive(Default, Clone, Copy, Hash, PartialEq, Eq)]
-struct Position {
-    x: i64,
-    y: i64,
-}
-
-#[derive(Default, Clone, Copy)]
-struct Rope {
-    head: Position,
-    tail: Position,
-}
-
-enum Move {
-    Up(i64),
-    Down(i64),
-    Left(i64),
-    Right(i64),
-}
 
 fn parse_input(input: &str) -> Vec<Move> {
     input
         .lines()
         .map(|line| line.split_whitespace())
-        .filter_map(|mut split| Some((split.next()?, split.next()?.parse::<i64>().ok()?)))
-        .map(|(dir, count)| match dir {
-            "U" => Move::Up(count),
-            "D" => Move::Down(count),
-            "L" => Move::Left(count),
-            "R" => Move::Right(count),
+        .filter_map(|mut split| Some((split.next()?, split.next()?.parse::<usize>().ok()?)))
+        .flat_map(|(dir, count)| match dir {
+            "U" => vec![Move::Up; count],
+            "D" => vec![Move::Down; count],
+            "L" => vec![Move::Left; count],
+            "R" => vec![Move::Right; count],
             _ => unreachable!(),
         })
         .collect()
 }
 
+fn find_unique_position_count(moves: &Vec<Move>, rope_len: usize) -> usize {
+    let mut rope = Rope::new(rope_len - 1);
+    let mut unique = HashSet::from([*rope.get_tail().unwrap()]);
+    for m in moves {
+        rope.do_move(*m);
+        unique.insert(*rope.get_tail().unwrap());
+    }
+    unique.len()
+}
+
 fn main() {
     let input = parse_input(include_str!("../input.txt"));
 
-    let mut rope = Rope::default();
-    let mut positions = HashSet::from([rope.tail]);
+    let unique_positions_rope = find_unique_position_count(&input, 2);
+    let unique_positions_snapped_rope = find_unique_position_count(&input, 10);
 
-    for m in input {
-        let count = match m {
-            Move::Up(count) => count,
-            Move::Down(count) => count,
-            Move::Left(count) => count,
-            Move::Right(count) => count,
-        };
-
-        for _ in 0..count {
-            let last_head = rope.head;
-
-            match m {
-                Move::Up(_) => rope.head.y += 1,
-                Move::Down(_) => rope.head.y -= 1,
-                Move::Left(_) => rope.head.x -= 1,
-                Move::Right(_) => rope.head.x += 1,
-            }
-
-            let y_diff = (rope.head.y - rope.tail.y).abs();
-            let x_diff = (rope.head.x - rope.tail.x).abs();
-
-            if y_diff >= 2 || x_diff >= 2 {
-                rope.tail = last_head;
-                positions.insert(rope.tail);
-            }
-        }
-    }
-
-    println!("Unique tail positions: {}", positions.len());
+    println!("Unique tail positions for rope: {}", unique_positions_rope);
+    println!(
+        "Unique tail positions for snapped rope: {}",
+        unique_positions_snapped_rope
+    );
 }
