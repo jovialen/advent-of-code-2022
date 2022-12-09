@@ -38,6 +38,10 @@ name = "d08-tree-house"
 version = "0.1.0"
 
 [[package]]
+name = "d09-rope-bridge"
+version = "0.1.0"
+
+[[package]]
 name = "either"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
