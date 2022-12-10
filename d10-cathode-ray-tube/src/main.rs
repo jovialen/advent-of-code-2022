@@ -1,3 +1,10 @@
+const DISPLAY_WIDTH: usize = 40;
+const DISPLAY_HEIGHT: usize = 6;
+const DISPLAY_SIZE: usize = DISPLAY_WIDTH * DISPLAY_HEIGHT;
+
+const PIXEL_ON: char = '#';
+const PIXEL_OFF: char = ' ';
+
 #[derive(Clone, Copy)]
 enum Instruction {
     Noop,
@@ -13,33 +20,64 @@ impl Instruction {
     }
 }
 
-fn execute(instructions: &Vec<Instruction>, breakpoints: &[usize]) -> (Vec<i64>, [bool; 40 * 6]) {
-    let mut cycle = 0;
-    let mut register_x: i64 = 1;
-    let mut signal_strengths = Vec::new();
-    let mut display = [false; 40 * 6];
+struct Communicator {
+    cycle: usize,
+    x_register: i64,
+    display: [bool; DISPLAY_SIZE],
+    signal_strengths: Vec<i64>,
+}
 
-    for instruction in instructions {
+impl Communicator {
+    fn new() -> Self {
+        Self {
+            cycle: 0,
+            x_register: 1,
+            display: [false; DISPLAY_SIZE],
+            signal_strengths: Vec::new(),
+        }
+    }
+
+    fn run(&mut self, instructions: &Vec<Instruction>) {
+        self.signal_strengths.clear();
+        for inst in instructions {
+            self.interpret(inst);
+        }
+    }
+
+    fn print_display(&self) {
+        for y in 0..DISPLAY_HEIGHT {
+            let row = self.display[y * DISPLAY_WIDTH..(y + 1) * DISPLAY_WIDTH]
+                .iter()
+                .map(|&on| if on { PIXEL_ON } else { PIXEL_OFF })
+                .collect::<String>();
+            println!("{}", row);
+        }
+    }
+
+    fn get_signal_strengths(&self) -> &Vec<i64> {
+        &self.signal_strengths
+    }
+
+    fn interpret(&mut self, instruction: &Instruction) {
         for _ in 0..instruction.len() {
-            let xpos = (cycle % 40) as i64;
-            if (register_x - 1..=register_x + 1).contains(&xpos) {
-                display[cycle] = true;
+            let xpos = (self.cycle % DISPLAY_WIDTH) as i64;
+            if self.x_register - 1 <= xpos && self.x_register + 1 >= xpos {
+                self.display[self.cycle % DISPLAY_SIZE] = true;
             }
 
-            cycle += 1;
-
-            if breakpoints.contains(&cycle) {
-                signal_strengths.push(register_x * cycle as i64);
+            if (self.cycle + 20) % 40 == 0 {
+                self.signal_strengths
+                    .push(self.x_register * self.cycle as i64);
             }
+
+            self.cycle += 1;
         }
 
         match instruction {
             Instruction::Noop => (),
-            Instruction::Addx(v) => register_x += v,
+            Instruction::Addx(v) => self.x_register += v,
         }
     }
-
-    (signal_strengths, display)
 }
 
 fn parse_input(input: &str) -> Vec<Instruction> {
@@ -56,21 +94,13 @@ fn parse_input(input: &str) -> Vec<Instruction> {
 
 fn main() {
     let input = parse_input(include_str!("../input.txt"));
+    let mut communicator = Communicator::new();
 
-    let (signal_strengths, display) = execute(&input, &[20, 60, 100, 140, 180, 220]);
-    let sum_signal_strengths: i64 = signal_strengths.iter().sum();
+    communicator.run(&input);
+
+    let sum_signal_strengths: i64 = communicator.get_signal_strengths().iter().sum();
+
     println!("Sum of signal strengths: {}", sum_signal_strengths);
-
-    for i in 0..6 {
-        let row = &display[i * 40..(i + 1) * 40];
-
-        for &pixel in row {
-            if pixel {
-                print!("#");
-            } else {
-                print!(".");
-            }
-        }
-        println!();
-    }
+    println!("Display:");
+    communicator.print_display();
 }
