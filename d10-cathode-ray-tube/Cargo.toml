@@ -1,0 +1,6 @@
+[package]
+name = "d10-cathode-ray-tube"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
