@@ -17,3 +17,4 @@ My solutions to the advent of code 2022.
 | 9   | 6087       | 2493        |
 | 10  | 15260      | PGHFGLUG    |
 | 11  | 120056     | 21816744824 |
+| 12  | 350        | 349         |
