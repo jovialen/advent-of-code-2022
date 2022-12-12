@@ -1,14 +1,14 @@
 use itertools::Itertools;
 use std::collections::vec_deque::VecDeque;
 
-#[derive(Debug)]
+#[derive(Clone, Copy, Debug)]
 enum Operation {
     Add(u64),
     Multiply(u64),
     RaiseToPower(u32),
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Monkey {
     items: VecDeque<u64>,
     operation: Operation,
@@ -79,44 +79,50 @@ fn parse_input(input: &str) -> Vec<Monkey> {
         .collect()
 }
 
-fn main() {
-    let mut monkeys = parse_input(include_str!("../input.txt"));
+fn solve(mut monkeys: Vec<Monkey>, rounds: usize, stress_reduction: f64) -> usize {
+    let mutual_factor = monkeys.iter().fold(1, |acc, m| acc * m.test_divisible);
 
-    for monkey in &monkeys {
-        println!("{:?}", monkey);
-    }
-
-    for _ in 0..20 {
+    for _ in 0..rounds {
         for i in 0..monkeys.len() {
             while let Some(item) = monkeys.get_mut(i).unwrap().items.pop_front() {
-                let worry = (match monkeys.get(i).unwrap().operation {
+                let monkey = monkeys.get_mut(i).unwrap();
+                monkey.inspections += 1;
+
+                let new_worry = (match monkey.operation {
                     Operation::Add(x) => item + x,
                     Operation::Multiply(x) => item * x,
                     Operation::RaiseToPower(x) => item.pow(x),
                 } as f64
-                    / 3.0)
-                    .floor() as u64;
+                    / stress_reduction)
+                    .floor() as u64
+                    % mutual_factor;
 
-                monkeys.get_mut(i).unwrap().inspections += 1;
-
-                if worry % monkeys.get(i).unwrap().test_divisible == 0 {
+                if new_worry % monkey.test_divisible == 0 {
                     let to = monkeys.get(i).unwrap().if_true;
-                    monkeys.get_mut(to).unwrap().items.push_back(worry);
+                    monkeys.get_mut(to).unwrap().items.push_back(new_worry);
                 } else {
                     let to = monkeys.get(i).unwrap().if_false;
-                    monkeys.get_mut(to).unwrap().items.push_back(worry);
+                    monkeys.get_mut(to).unwrap().items.push_back(new_worry);
                 }
             }
         }
     }
 
-    let product: usize = monkeys
+    monkeys
         .iter()
         .map(|monkey| monkey.inspections)
         .sorted()
         .rev()
         .take(2)
-        .product();
+        .product()
+}
 
-    println!("{}", product);
+fn main() {
+    let monkeys = parse_input(include_str!("../input.txt"));
+
+    let short_round = solve(monkeys.clone(), 20, 3.0);
+    let long_round = solve(monkeys.clone(), 10_000, 1.0);
+
+    println!("After 20 rounds: {}", short_round);
+    println!("After 10.000 rounds: {}", long_round);
 }
