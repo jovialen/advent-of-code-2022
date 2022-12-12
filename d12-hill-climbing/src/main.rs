@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use rustc_hash::FxHashMap;
 
 #[derive(Hash, PartialEq, Eq, Debug, Default, Clone, Copy)]
 struct Position {
@@ -72,9 +72,9 @@ impl From<&str> for Map {
 
 fn a_star(map: &Map) -> Option<Vec<Position>> {
     let mut open = vec![map.start];
-    let mut came_from = HashMap::new();
-    let mut g_score = HashMap::new();
-    let mut f_score = HashMap::new();
+    let mut came_from = FxHashMap::default();
+    let mut g_score = FxHashMap::default();
+    let mut f_score = FxHashMap::default();
     g_score.insert(map.start, 0);
     f_score.insert(map.start, map.start.dist(map.best));
 
