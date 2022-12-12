@@ -11,4 +11,5 @@ members = [
     "d09-rope-bridge",
     "d10-cathode-ray-tube",
     "d11-monkey-in-the-middle",
+    "d12-hill-climbing",
 ]
