@@ -1,7 +1,8 @@
 use itertools::EitherOrBoth::{Both, Left, Right};
 use itertools::Itertools;
+use std::cmp::Ordering;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 enum Element {
     Number(u64),
     List(Vec<Element>),
@@ -34,59 +35,69 @@ fn parse_element(input: &str) -> Vec<Element> {
         .collect_vec()
 }
 
-fn parse_input(input: &str) -> Vec<Pair> {
+fn parse_input(input: &str) -> Vec<Vec<Element>> {
     input
         .lines()
-        .group_by(|line| !line.is_empty())
-        .into_iter()
-        .filter(|(not_empty, _)| *not_empty)
-        .map(|(_, lines)| {
-            let mut iter = lines.map(|line| parse_element(line));
-            Pair(iter.next().unwrap(), iter.next().unwrap())
-        })
+        .filter(|line| !line.is_empty())
+        .map(|line| parse_element(line))
         .collect()
 }
 
-fn compare(left: &Vec<Element>, right: &Vec<Element>) -> Option<bool> {
+fn compare(left: &Vec<Element>, right: &Vec<Element>) -> Ordering {
     for pair in left.iter().zip_longest(right.iter()) {
         match pair {
-            Left(_) => return Some(false),
-            Right(_) => return Some(true),
+            Left(_) => return Ordering::Greater,
+            Right(_) => return Ordering::Less,
             Both(x, y) => match (x, y) {
                 (Element::Number(x), Element::Number(y)) if x == y => continue,
-                (Element::Number(x), Element::Number(y)) if x < y => return Some(true),
-                (Element::Number(x), Element::Number(y)) if x > y => return Some(false),
+                (Element::Number(x), Element::Number(y)) if x < y => return Ordering::Less,
+                (Element::Number(x), Element::Number(y)) if x > y => return Ordering::Greater,
                 (Element::List(x), Element::Number(_)) => match compare(x, &vec![y.clone()]) {
-                    res @ Some(_) => return res,
-                    None => continue,
+                    Ordering::Equal => continue,
+                    res => return res,
                 },
                 (Element::Number(_), Element::List(y)) => match compare(&vec![x.clone()], y) {
-                    res @ Some(_) => return res,
-                    None => continue,
+                    Ordering::Equal => continue,
+                    res => return res,
                 },
                 (Element::List(x), Element::List(y)) => match compare(x, y) {
-                    res @ Some(_) => return res,
-                    None => continue,
+                    Ordering::Equal => continue,
+                    res => return res,
                 },
                 _ => unreachable!(),
             },
         }
     }
-    None
+    Ordering::Equal
 }
 
 fn is_ordered(left: &Vec<Element>, right: &Vec<Element>) -> bool {
-    compare(left, right).unwrap_or(true)
+    compare(left, right) != Ordering::Greater
 }
 
 fn main() {
-    let pairs = parse_input(include_str!("../input.txt"));
+    let elements = parse_input(include_str!("../input.txt"));
 
-    let sum_of_indices = pairs
-        .iter()
+    let sum_of_indices = elements
+        .chunks_exact(2)
         .enumerate()
-        .filter(|(_, pair)| is_ordered(&pair.0, &pair.1))
+        .filter(|(_, chunk)| is_ordered(&chunk[0], &chunk[1]))
         .fold(0, |acc, (i, _)| acc + i + 1);
 
     println!("Sum of indices of ordered elements: {}", sum_of_indices);
+
+    let dividers = vec![
+        vec![Element::List(vec![Element::Number(2)])],
+        vec![Element::List(vec![Element::Number(6)])],
+    ];
+
+    let product_of_dividers = elements
+        .iter()
+        .chain(dividers.iter())
+        .sorted_by(|a, b| compare(a, b))
+        .enumerate()
+        .filter(|(_, element)| dividers.contains(element))
+        .fold(1, |acc, (i, _)| acc * (i + 1));
+
+    println!("Decoder key: {}", product_of_dividers);
 }
