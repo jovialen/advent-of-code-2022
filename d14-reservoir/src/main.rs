@@ -13,9 +13,13 @@ enum CellKind {
     Solid,
 }
 
-const WIDTH: usize = 800;
-const HEIGHT: usize = 200;
-type CellMap = [[CellKind; HEIGHT]; WIDTH];
+const MAX_WIDTH: usize = 800;
+const MAX_HEIGHT: usize = 200;
+
+struct CellMap {
+    cells: [[CellKind; MAX_HEIGHT]; MAX_WIDTH],
+    height: usize,
+}
 
 impl From<&str> for Position {
     fn from(src: &str) -> Self {
@@ -27,61 +31,66 @@ impl From<&str> for Position {
     }
 }
 
-fn parse_input(input: &str) -> (CellMap, usize) {
-    let mut result = [[CellKind::Air; HEIGHT]; WIDTH];
-    let mut highest_point = 0;
+impl From<&str> for CellMap {
+    fn from(src: &str) -> Self {
+        let mut cells = [[CellKind::Air; MAX_HEIGHT]; MAX_WIDTH];
+        let mut highest_point = 0;
 
-    let shapes: Vec<_> = input
-        .lines()
-        .filter(|line| !line.is_empty())
-        .map(|line| {
-            line.split(" -> ")
-                .map(|pos| Position::from(pos))
-                .collect::<Shape>()
-        })
-        .collect();
+        let shapes: Vec<_> = src
+            .lines()
+            .filter(|line| !line.is_empty())
+            .map(|line| {
+                line.split(" -> ")
+                    .map(|pos| Position::from(pos))
+                    .collect::<Shape>()
+            })
+            .collect();
 
-    for shape in shapes {
-        for slice in shape.windows(2) {
-            let xs = slice.iter().map(|pos| pos.x).collect::<Vec<_>>();
-            let ys = slice.iter().map(|pos| pos.y).collect::<Vec<_>>();
-            let (min_x, max_x) = (*xs.iter().min().unwrap(), *xs.iter().max().unwrap());
-            let (min_y, max_y) = (*ys.iter().min().unwrap(), *ys.iter().max().unwrap());
+        for shape in shapes {
+            for slice in shape.windows(2) {
+                let xs = slice.iter().map(|pos| pos.x).collect::<Vec<_>>();
+                let ys = slice.iter().map(|pos| pos.y).collect::<Vec<_>>();
+                let (min_x, max_x) = (*xs.iter().min().unwrap(), *xs.iter().max().unwrap());
+                let (min_y, max_y) = (*ys.iter().min().unwrap(), *ys.iter().max().unwrap());
 
-            highest_point = highest_point.max(max_y);
+                highest_point = highest_point.max(max_y);
 
-            if min_x == max_x {
-                for y in min_y..=max_y {
-                    result[min_x][y] = CellKind::Solid;
-                }
-            } else {
-                for x in min_x..=max_x {
-                    result[x][min_y] = CellKind::Solid;
+                if min_x == max_x {
+                    for y in min_y..=max_y {
+                        cells[min_x][y] = CellKind::Solid;
+                    }
+                } else {
+                    for x in min_x..=max_x {
+                        cells[x][min_y] = CellKind::Solid;
+                    }
                 }
             }
         }
-    }
 
-    (result, highest_point + 2)
+        Self {
+            cells,
+            height: highest_point + 2,
+        }
+    }
 }
 
 fn main() {
-    let (mut map, height) = parse_input(include_str!("../input.txt"));
+    let mut map = CellMap::from(include_str!("../input.txt"));
 
     let mut resting = 0;
     'outer: loop {
         let mut x = 500;
 
-        for y in 0..height {
-            if map[x][y + 1] == CellKind::Air {
+        for y in 0..map.height {
+            if map.cells[x][y + 1] == CellKind::Air {
                 // Do nothing, fall straight down
-            } else if map[x - 1][y + 1] == CellKind::Air {
+            } else if map.cells[x - 1][y + 1] == CellKind::Air {
                 x -= 1;
-            } else if map[x + 1][y + 1] == CellKind::Air {
+            } else if map.cells[x + 1][y + 1] == CellKind::Air {
                 x += 1;
             } else {
                 resting += 1;
-                map[x][y] = CellKind::Sand;
+                map.cells[x][y] = CellKind::Sand;
                 continue 'outer;
             }
         }
@@ -91,7 +100,7 @@ fn main() {
 
     println!("Amount of sand that came to rest: {}", resting);
 
-    map.iter_mut().for_each(|column| {
+    map.cells.iter_mut().for_each(|column| {
         column.iter_mut().for_each(|cell| {
             *cell = match cell {
                 CellKind::Sand => CellKind::Air,
@@ -102,28 +111,28 @@ fn main() {
 
     let mut resting = 0;
     'outer: loop {
-        if map[500][0] == CellKind::Sand {
+        if map.cells[500][0] == CellKind::Sand {
             break;
         }
 
         let mut x = 500;
 
-        for y in 0..height {
-            if map[x][y + 1] == CellKind::Air {
+        for y in 0..map.height {
+            if map.cells[x][y + 1] == CellKind::Air {
                 // Do nothing, fall straight down
-            } else if map[x - 1][y + 1] == CellKind::Air {
+            } else if map.cells[x - 1][y + 1] == CellKind::Air {
                 x -= 1;
-            } else if map[x + 1][y + 1] == CellKind::Air {
+            } else if map.cells[x + 1][y + 1] == CellKind::Air {
                 x += 1;
             } else {
                 resting += 1;
-                map[x][y] = CellKind::Sand;
+                map.cells[x][y] = CellKind::Sand;
                 continue 'outer;
             }
         }
 
         resting += 1;
-        map[x][height - 1] = CellKind::Sand;
+        map.cells[x][map.height - 1] = CellKind::Sand;
     }
 
     println!("Amount of sand to block source: {}", resting);
