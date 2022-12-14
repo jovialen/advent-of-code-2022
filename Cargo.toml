@@ -13,4 +13,5 @@ members = [
     "d11-monkey-in-the-middle",
     "d12-hill-climbing",
     "d13-distress-signal",
+    "d14-reservoir",
 ]
