@@ -80,6 +80,9 @@ version = "0.1.0"
 [[package]]
 name = "d16-valves"
 version = "0.1.0"
+dependencies = [
+ "itertools",
+]
 
 [[package]]
 name = "either"
