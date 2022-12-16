@@ -15,4 +15,5 @@ members = [
     "d13-distress-signal",
     "d14-reservoir",
     "d15-beacon-exclusion-zone",
+    "d16-valves",
 ]
