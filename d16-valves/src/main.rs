@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, Clone, Hash, PartialEq)]
 struct Valve {
     name: String,
     flow_rate: usize,
@@ -20,6 +20,80 @@ fn parse_input(input: &str) -> Vec<Valve> {
         .collect()
 }
 
+fn measure_distances(network: &Vec<Valve>) -> Vec<Vec<usize>> {
+    let mut distances = vec![vec![usize::MAX / 2; network.len()]; network.len()];
+
+    for (i, valve) in network.iter().enumerate() {
+        for (j, _) in network
+            .iter()
+            .enumerate()
+            .filter(|(_, dest)| valve.connections.contains(&dest.name))
+        {
+            distances[i][j] = 1;
+        }
+        distances[i][i] = 0;
+    }
+
+    for k in 0..distances.len() {
+        for i in 0..distances.len() {
+            for j in 0..distances.len() {
+                if distances[i][j] > distances[i][k] + distances[k][j] {
+                    distances[i][j] = distances[i][k] + distances[k][j];
+                }
+            }
+        }
+    }
+
+    distances
+}
+
+fn maximum_flow(
+    current: &(usize, Valve),
+    indexed_network: &Vec<(usize, Valve)>,
+    distances: &Vec<Vec<usize>>,
+    mut visited: Vec<(usize, Valve)>,
+    remaining_time: usize,
+) -> usize {
+    visited.push(current.clone());
+
+    current.1.flow_rate * remaining_time
+        + indexed_network
+            .iter()
+            .filter(|node| !visited.contains(node))
+            .filter_map(|node| {
+                Some(maximum_flow(
+                    node,
+                    indexed_network,
+                    distances,
+                    visited.clone(),
+                    remaining_time.checked_sub(distances[current.0][node.0] + 1)?,
+                ))
+            })
+            .max()
+            .unwrap_or(0)
+}
+
 fn main() {
     let network = parse_input(include_str!("../input.txt"));
+    let distances = measure_distances(&network);
+    let origin = "AA".to_string();
+
+    let reduced_network: Vec<_> = network
+        .into_iter()
+        .enumerate()
+        .filter(|(_, valve)| valve.flow_rate > 0 || valve.name == origin)
+        .collect();
+
+    let max = maximum_flow(
+        &reduced_network
+            .iter()
+            .find(|(_, valve)| valve.name == origin)
+            .unwrap(),
+        &reduced_network,
+        &distances,
+        Vec::new(),
+        30,
+    );
+
+    println!("Maximum possible flow from valves: {}", max);
 }
