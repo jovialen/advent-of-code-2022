@@ -82,19 +82,17 @@ fn maximum_flow_with_elephant(
     max_time: usize,
     teaching_time: usize,
 ) -> usize {
-    let mut max = 0;
-    for human in indexed_network
+    indexed_network
         .into_iter()
         .map(|node| node.clone())
         .combinations(indexed_network.len() / 2)
-    {
-        let elephant: Vec<_> = indexed_network
-            .into_iter()
-            .map(|node| node.clone())
-            .filter(|node| !human.contains(node))
-            .collect();
+        .map(|human| {
+            let elephant: Vec<_> = indexed_network
+                .into_iter()
+                .map(|node| node.clone())
+                .filter(|node| !human.contains(node))
+                .collect();
 
-        max = max.max(
             maximum_flow(
                 origin,
                 &human,
@@ -107,10 +105,10 @@ fn maximum_flow_with_elephant(
                 &distances,
                 Vec::new(),
                 max_time - teaching_time,
-            ),
-        );
-    }
-    max
+            )
+        })
+        .max()
+        .unwrap_or(0)
 }
 
 fn main() {
