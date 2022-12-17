@@ -16,4 +16,5 @@ members = [
     "d14-reservoir",
     "d15-beacon-exclusion-zone",
     "d16-valves",
+    "d17-pyroclastic-flow",
 ]
