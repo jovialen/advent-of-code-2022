@@ -1,6 +1,7 @@
-use std::ops::Add;
+use pathfinding::prelude::astar;
+use std::ops::{Add, Sub};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
 struct Point3D(i32, i32, i32);
 
 impl Add for Point3D {
@@ -8,6 +9,35 @@ impl Add for Point3D {
 
     fn add(self, rhs: Self) -> Self::Output {
         Self(self.0 + rhs.0, self.1 + rhs.1, self.2 + rhs.2)
+    }
+}
+
+impl Sub for Point3D {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self(self.0 - rhs.0, self.1 - rhs.1, self.2 - rhs.2)
+    }
+}
+
+impl Point3D {
+    fn get_neighbours(&self) -> [Point3D; 6] {
+        [
+            *self + Point3D(-1, 0, 0),
+            *self + Point3D(1, 0, 0),
+            *self + Point3D(0, -1, 0),
+            *self + Point3D(0, 1, 0),
+            *self + Point3D(0, 0, -1),
+            *self + Point3D(0, 0, 1),
+        ]
+    }
+
+    fn distance(&self, rhs: Self) -> f64 {
+        (*self - rhs).len()
+    }
+
+    fn len(&self) -> f64 {
+        ((self.0.pow(2) + self.1.pow(2) + self.2.pow(2)) as f64).sqrt()
     }
 }
 
@@ -26,20 +56,27 @@ fn parse_input(input: &str) -> Vec<Point3D> {
         .collect()
 }
 
-fn surface_area(points: Vec<Point3D>) -> usize {
-    let neighbours = [
-        Point3D(-1, 0, 0),
-        Point3D(1, 0, 0),
-        Point3D(0, -1, 0),
-        Point3D(0, 1, 0),
-        Point3D(0, 0, -1),
-        Point3D(0, 0, 1),
-    ];
+fn surface_area(points: &Vec<Point3D>) -> usize {
+    points.iter().fold(0, move |acc, point| {
+        point.get_neighbours().iter().fold(acc, |acc, neighbour| {
+            let is_air = !points.contains(&neighbour);
 
-    points.iter().fold(0, |acc, point| {
-        neighbours.iter().fold(acc, |acc, offset| {
-            let neighbour = *point + *offset;
-            if !points.contains(&neighbour) {
+            let goal = Point3D(-1, -1, -1);
+            let is_free = astar(
+                neighbour,
+                |point| {
+                    point
+                        .get_neighbours()
+                        .into_iter()
+                        .filter(|point| !points.contains(point))
+                        .map(|point| (point, 1))
+                },
+                |point| point.distance(goal) as u32,
+                |&point| point == goal,
+            )
+            .is_some();
+
+            if is_air && is_free {
                 acc + 1
             } else {
                 acc
@@ -51,6 +88,6 @@ fn surface_area(points: Vec<Point3D>) -> usize {
 fn main() {
     let points = parse_input(include_str!("../input.txt"));
 
-    let surface = surface_area(points);
+    let surface = surface_area(&points);
     println!("Surface area of all shapes: {}", surface);
 }
