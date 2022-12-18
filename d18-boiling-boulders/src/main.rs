@@ -1,6 +1,6 @@
-use std::{collections::HashSet, ops::Add};
+use std::ops::Add;
 
-#[derive(Hash, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct Point3D(i32, i32, i32);
 
 impl Add for Point3D {
@@ -36,22 +36,16 @@ fn surface_area(points: Vec<Point3D>) -> usize {
         Point3D(0, 0, 1),
     ];
 
-    let mut surface = points.len() * neighbours.len();
-    let mut visited = HashSet::new();
-
-    for point in &points {
-        visited.insert(point);
-
-        for neighbour in neighbours {
-            let cell = *point + neighbour;
-
-            if points.contains(&cell) && !visited.contains(&cell) {
-                surface -= 2;
+    points.iter().fold(0, |acc, point| {
+        neighbours.iter().fold(acc, |acc, offset| {
+            let neighbour = *point + *offset;
+            if !points.contains(&neighbour) {
+                acc + 1
+            } else {
+                acc
             }
-        }
-    }
-
-    surface
+        })
+    })
 }
 
 fn main() {
