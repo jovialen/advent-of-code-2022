@@ -70,7 +70,7 @@ fn surface_area(points: &Vec<Point3D>) -> usize {
             let is_free = if let Some(free) = cache.get(neighbour) {
                 *free
             } else {
-                let free = astar(
+                if let Some((path, _)) = astar(
                     neighbour,
                     |point| {
                         point
@@ -81,10 +81,15 @@ fn surface_area(points: &Vec<Point3D>) -> usize {
                     },
                     |point| point.distance(goal) as u32,
                     |&point| point == goal,
-                )
-                .is_some();
-                cache.insert(*neighbour, free);
-                free
+                ) {
+                    for point in path {
+                        cache.insert(point, true);
+                    }
+                    true
+                } else {
+                    cache.insert(*neighbour, false);
+                    false
+                }
             };
 
             if is_air && is_free {
