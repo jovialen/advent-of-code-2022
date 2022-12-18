@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 #[derive(Debug)]
 enum Direction {
     Left,
@@ -48,7 +50,6 @@ fn shift_tetrino(tetrino: u32, dir: &Direction) -> u32 {
     let tetrino_mask = 0b1111_1110_1111_1110_1111_1110_1111_1110;
     let blocking_left_bits = 0b1000_0000_1000_0000_1000_0000_1000_0000;
     let blocking_right_bits = 0b0000_0010_0000_0010_0000_0010_0000_0010;
-    // println!("Shifting {:?}", dir);
     match dir {
         Direction::Left if tetrino & blocking_left_bits == 0 => (tetrino << 1) & tetrino_mask,
         Direction::Right if tetrino & blocking_right_bits == 0 => (tetrino >> 1) & tetrino_mask,
@@ -57,11 +58,18 @@ fn shift_tetrino(tetrino: u32, dir: &Direction) -> u32 {
 }
 
 fn simulate(rock_count: usize, directions: &Vec<Direction>) -> usize {
+    let mut cache = HashMap::new();
     let mut tower: Vec<u8> = vec![0xFF];
-    let mut next_tetrino = TETRINOS.iter().cycle();
-    let mut next_stream = directions.iter().cycle();
-    for _ in 0..rock_count {
-        let mut tetrino = *next_tetrino.next().unwrap();
+    let mut next_tetrino = TETRINOS.iter().enumerate().cycle();
+    let mut next_stream = directions.iter().enumerate().cycle();
+    let mut height = 0;
+    let mut i = 0;
+    while i < rock_count {
+        let (tetrino_index, mut tetrino) = next_tetrino
+            .next()
+            .and_then(|(i, t)| Some((i, *t)))
+            .unwrap();
+
         for y in (1..tower.len() + 4).rev() {
             let map_line_3 = *tower.get(y + 3).unwrap_or(&0);
             let map_line_2 = *tower.get(y + 2).unwrap_or(&0);
@@ -72,7 +80,8 @@ fn simulate(rock_count: usize, directions: &Vec<Direction>) -> usize {
             let map_id = u32::from_be_bytes([map_line_3, map_line_2, map_line_1, map_line_0]);
             let next_id = u32::from_be_bytes([map_line_2, map_line_1, map_line_0, map_line_next]);
 
-            tetrino = match shift_tetrino(tetrino, next_stream.next().unwrap()) {
+            let (direction_index, direction) = next_stream.next().unwrap();
+            tetrino = match shift_tetrino(tetrino, direction) {
                 res if res & map_id == 0 => res,
                 _ => tetrino,
             };
@@ -85,22 +94,42 @@ fn simulate(rock_count: usize, directions: &Vec<Direction>) -> usize {
 
                     if y + i >= tower.len() {
                         tower.push(res_line);
+                        height += 1;
                     } else {
                         tower[y + i] = res_line;
                     }
                 }
 
+                let tower_id = tower
+                    .iter()
+                    .rev()
+                    .enumerate()
+                    .take(16)
+                    .fold(0u128, |acc, (i, line)| acc | (*line as u128) << (i * 8));
+
+                // Gave up: came from "https://github.com/AxlLind/AdventOfCode2022/blob/main/src/bin/17.rs"
+                let key = (tetrino_index, direction_index, tower_id);
+                if let Some((duration, pattern_height)) = cache.get(&key) {
+                    let repeats = (rock_count - duration) / (i - duration) - 1;
+                    i += (i - duration) * repeats;
+                    height +=
+                        (tower.iter().filter(|&&line| line != 0).count() - 1 - pattern_height)
+                            * repeats;
+                } else {
+                    cache.insert(key, (i, height));
+                }
+
                 break;
             }
         }
+        i += 1;
     }
 
-    tower.iter().filter(|&&line| line != 0).count() - 1
+    height
 }
 
 fn main() {
-    // let jetstreams = parse_input(include_str!("../input.txt"));
-    let jetstreams = parse_input(">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>");
+    let jetstreams = parse_input(include_str!("../input.txt"));
 
     let height = simulate(2022, &jetstreams);
     println!("Height of tower after 2022 blocks: {}", height);
