@@ -60,39 +60,52 @@ fn parse_input(input: &str) -> Vec<Point3D> {
 }
 
 fn surface_area(points: &Vec<Point3D>) -> usize {
+    surface_area_eval(points, |_, point| !points.contains(&point))
+}
+
+fn exterior_surface_area(points: &Vec<Point3D>) -> usize {
+    surface_area_eval(points, |cache, point| {
+        let is_air = !points.contains(&point);
+
+        let goal = Point3D(-1, -1, -1);
+        let is_free = if let Some(free) = cache.get(point) {
+            *free
+        } else {
+            if let Some((path, _)) = astar(
+                point,
+                |point| {
+                    point
+                        .get_neighbours()
+                        .into_iter()
+                        .filter(|point| !points.contains(point))
+                        .map(|point| (point, 1))
+                },
+                |point| point.distance(goal) as u32,
+                |&point| point == goal,
+            ) {
+                for point in path {
+                    cache.insert(point, true);
+                }
+                true
+            } else {
+                cache.insert(*point, false);
+                false
+            }
+        };
+
+        is_air && is_free
+    })
+}
+
+fn surface_area_eval<P>(points: &Vec<Point3D>, mut predicate: P) -> usize
+where
+    P: FnMut(&mut HashMap<Point3D, bool>, &Point3D) -> bool,
+{
     let mut cache = HashMap::new();
 
     points.iter().fold(0, move |acc, point| {
         point.get_neighbours().iter().fold(acc, |acc, neighbour| {
-            let is_air = !points.contains(&neighbour);
-
-            let goal = Point3D(-1, -1, -1);
-            let is_free = if let Some(free) = cache.get(neighbour) {
-                *free
-            } else {
-                if let Some((path, _)) = astar(
-                    neighbour,
-                    |point| {
-                        point
-                            .get_neighbours()
-                            .into_iter()
-                            .filter(|point| !points.contains(point))
-                            .map(|point| (point, 1))
-                    },
-                    |point| point.distance(goal) as u32,
-                    |&point| point == goal,
-                ) {
-                    for point in path {
-                        cache.insert(point, true);
-                    }
-                    true
-                } else {
-                    cache.insert(*neighbour, false);
-                    false
-                }
-            };
-
-            if is_air && is_free {
+            if predicate(&mut cache, neighbour) {
                 acc + 1
             } else {
                 acc
@@ -106,4 +119,10 @@ fn main() {
 
     let surface = surface_area(&points);
     println!("Surface area of all shapes: {}", surface);
+
+    let surface = exterior_surface_area(&points);
+    println!(
+        "Surface area of all shapes without air bubbles: {}",
+        surface
+    );
 }
