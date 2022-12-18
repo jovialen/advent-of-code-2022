@@ -1,3 +1,6 @@
+// Wow, this file is a mess. Wont be refactored to something resonable
+// because Im so done with this task.
+
 use std::collections::HashMap;
 
 #[derive(Debug)]
