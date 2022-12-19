@@ -1,6 +1,0 @@
-[package]
-name = "d19-not-enough-materials"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
