@@ -18,4 +18,5 @@ members = [
     "d16-valves",
     "d17-pyroclastic-flow",
     "d18-boiling-boulders",
+    "d19-not-enough-materials",
 ]
