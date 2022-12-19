@@ -16,27 +16,28 @@ struct Blueprint {
     geode_robot: GeodeRobot,
 }
 
-impl From<&str> for Blueprint {
-    fn from(src: &str) -> Self {
+impl TryFrom<&str> for Blueprint {
+    type Error = ();
+
+    fn try_from(src: &str) -> Result<Self, Self::Error> {
         let mut iter = src
             .split(&[' ', ':'])
             .filter_map(|word| word.parse::<u32>().ok());
 
-        Self {
-            id: iter.next().unwrap_or(0),
-            ore_robot: OreRobot(iter.next().unwrap_or(0)),
-            clay_robot: ClayRobot(iter.next().unwrap_or(0)),
-            obsidian_robot: ObsidianRobot(iter.next().unwrap_or(0), iter.next().unwrap_or(0)),
-            geode_robot: GeodeRobot(iter.next().unwrap_or(0), iter.next().unwrap_or(0)),
-        }
+        Ok(Self {
+            id: iter.next().ok_or(())?,
+            ore_robot: OreRobot(iter.next().ok_or(())?),
+            clay_robot: ClayRobot(iter.next().ok_or(())?),
+            obsidian_robot: ObsidianRobot(iter.next().ok_or(())?, iter.next().ok_or(())?),
+            geode_robot: GeodeRobot(iter.next().ok_or(())?, iter.next().ok_or(())?),
+        })
     }
 }
 
 fn parse_input(input: &str) -> Vec<Blueprint> {
     input
         .lines()
-        .filter(|line| !line.is_empty())
-        .map(Blueprint::from)
+        .filter_map(|line| Blueprint::try_from(line).ok())
         .collect()
 }
 
